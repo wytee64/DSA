@@ -1,44 +1,109 @@
 import ballerina/http;
 
-type Asset record {
-   int asset_id;
-   string asset_name;
-   string faculty;
-   string status;
-};
-// {} for flexiblity and easier consuption of data that is unpredictable e.g dynamic json
+type Component record {| 
+    string id?;
+    string name;
+    string? serial;
+    string status = "OK"; 
+|};
 
+type Asset record {| 
+    string assetTag;
+    string name;
+    string faculty;
+    string department;
+    string status;
+    string acquiredDate;
+    map<Component> components;
+|};
 
 final Asset[] & readonly assets = [
-  {asset_id: 1,asset_name: "Desktop A",faculty: "Science",status: "Active"}, {asset_id: 2, asset_name: "Desktop B",faculty: "Education",status: "Not in use"},
- {asset_id: 3,asset_name: "Computer",faculty: "Computer Science",status: "Maintainance"},
- {asset_id: 4,asset_name: "Camera",faculty: "Journalism",status: "In use"}
+    {
+        assetTag: "AST-001",
+        name: "Desktop A",
+        faculty: "Science",
+        department: "Physics",
+        status: "Active",
+        acquiredDate: "2023-01-10",
+        components: {
+            "comp1": {id: "C-001", name: "CPU", serial: "SN12345"},
+            "comp2": {id: "C-002", name: "Monitor", serial: "SN67890"}
+        }
+    },
+    {
+        assetTag: "AST-002",
+        name: "Camera",
+        faculty: "Journalism",
+        department: "Media",
+        status: "In use",
+        acquiredDate: "2022-05-15",
+        components: {
+            "comp1": {id: "C-003", name: "Lens", serial: "LNS98765", status: "FAULTY"},
+            "comp2": {id: "C-004", name: "Tripod", serial: "TR1234"}
+        }
+    },
+    
+    {
+        assetTag: "AST-003",
+        name: "Desktop B",
+        faculty: "Education",
+        department: "Mathematics",
+        status: "Not in use",
+        acquiredDate: "2021-08-28",
+        components: {
+            "comp1": {id: "C-005", name: "Keyboard", serial: "KB123"},
+            "comp2": {id: "C-006", name: "Mouse", serial: "MS456"}
+        }
+    }
+];
 
-  ];
-  //its readonly because the assets are fixed and cant be changed after creation basically immutabe
-   //stated Final to prevent reassginment of the variable Asset again
 
+service /assets on new http:Listener(9090) {
 
-service /assets on new //listens to requests made to path assets THE HTTP BELOW TELLS THE PATH TO LISTEN TO PORT 9090 NO OTHER PORT
-http:Listener(9090) {
+    isolated resource function get .(@http:Query string? faculty) 
+        returns http:Response|Asset[] {
 
-isolated resource function get .(@http:Query string? faculty) returns  http:Response|Asset[] {
-  Asset[] result = faculty is string? assets.filter(asset => asset.faculty == faculty)
-  : assets;
+        Asset[] result = faculty is string
+            ? assets.filter(asset => asset.faculty == faculty)
+            : assets;
 
-  if faculty is string && result.length()==0 {
-    http:Response res=new;
-    res.statusCode=404;
-    res.setPayload({"message": "No assets found for faculty ", faculty});
+        if faculty is string && result.length() == 0 {
+            http:Response res = new;
+            res.statusCode = 404;
+            res.setPayload({message: "No assets found for faculty ", faculty});
+            return res;
+        }
 
-    return res;
-  }
-<<<<<<< HEAD:question-1/main.bal
-=======
+        return result;
+    }
 
-return result;
+isolated resource function get [string assetTag]() 
+        returns http:Response|Asset {
+
+    Asset[] matches = assets.filter(a => a.assetTag == assetTag);
+
+    if matches.length() > 0 {
+        return matches[0];
+    } else {
+        http:Response res = new;
+        res.statusCode = 404;
+        res.setPayload({message: "Asset with tag " + assetTag + " not found"});
+        return res;
+    }
 }
 
-}
-//i think that clears it all
+isolated resource function get [string assetTag]/components() 
+        returns http:Response|map<Component> {
 
+    Asset[] matches = assets.filter(a => a.assetTag == assetTag);
+
+    if matches.length() > 0 {
+        return matches[0].components;
+    } else {
+        http:Response res = new;
+        res.statusCode = 404;
+        res.setPayload({message: "Asset with tag " + assetTag + " not found"});
+        return res;
+    }
+        }
+}
