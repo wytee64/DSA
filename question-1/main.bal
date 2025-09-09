@@ -33,6 +33,12 @@ isolated resource function get .(@http:Query string? faculty) returns  http:Resp
 
     return res;
   }
+<<<<<<< HEAD:question-1/main.bal
+=======
+
+return result;
+}
+>>>>>>> e67f1b1394eff674dca362b8c48a3e55efb61fa5:hello_api/main.bal
 
 return result; //forgot to add this
 
