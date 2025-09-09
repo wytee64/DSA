@@ -42,7 +42,7 @@ final Asset[] & readonly assets = [
             "comp2": {id: "C-004", name: "Tripod", serial: "TR1234"}
         }
     },
-    
+
     {
         assetTag: "AST-003",
         name: "Desktop B",
@@ -67,7 +67,6 @@ service /assets on new http:Listener(9090) {
             ? assets.filter(asset => asset.faculty == faculty)
             : assets;
 
-<<<<<<< HEAD
         if faculty is string && result.length() == 0 {
             http:Response res = new;
             res.statusCode = 404;
@@ -91,11 +90,6 @@ isolated resource function get [string assetTag]()
         res.setPayload({message: "Asset with tag " + assetTag + " not found"});
         return res;
     }
-=======
-    return res;
-  }
-return result;
->>>>>>> 4130908aa86cf25fab77a62c7fa950829358c82f
 }
 
 isolated resource function get [string assetTag]/components() 
