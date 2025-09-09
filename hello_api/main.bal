@@ -30,13 +30,14 @@ isolated resource function get .(@http:Query string? faculty) returns  http:Resp
     http:Response res=new;
     res.statusCode=404;
     res.setPayload({"message": "No assets found for faculty ", faculty});
+
     return res;
   }
+
+return result; //forgot to add this
+
 }
 
-  
-
 }
-
 //i think that clears it all
 
