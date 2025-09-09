@@ -32,6 +32,8 @@ isolated resource function get .(@http:Query string? faculty) returns  http:Resp
     res.setPayload({"message": "No assets found for faculty ", faculty});
     return res;
   }
+
+return result;
 }
 
   
