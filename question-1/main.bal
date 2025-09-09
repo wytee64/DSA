@@ -16,7 +16,7 @@ type Asset record {|
     string acquiredDate;
     map<Component> components;
 |};
-
+// readonly to prevent change in these existing assets, final asset so the value canot be reassigned
 final Asset[] & readonly assets = [
     {
         assetTag: "AST-001",
@@ -57,13 +57,14 @@ final Asset[] & readonly assets = [
     }
 ];
 
-
+// the http:listener accepts the http requests made by the server on port 9090
 service /assets on new http:Listener(9090) {
-
+// nb the query is the to check for the parameter if its there
+// the http:Response|Assets returns either the HTTP response "404" or the list of assets
     isolated resource function get .(@http:Query string? faculty) 
         returns http:Response|Asset[] {
 
-        Asset[] result = faculty is string
+        Asset[] result = faculty is string 
             ? assets.filter(asset => asset.faculty == faculty)
             : assets;
 
@@ -73,13 +74,13 @@ service /assets on new http:Listener(9090) {
             res.setPayload({message: "No assets found for faculty ", faculty});
             return res;
         }
-
+// if no assets match faculty it will retuen the 404 error, otherwise as you see below my guy it will retuen the filtered array of assets
         return result;
     }
 
 isolated resource function get [string assetTag]() 
         returns http:Response|Asset {
-
+// assetTag is a path parameter which the get function will look for
     Asset[] matches = assets.filter(a => a.assetTag == assetTag);
 
     if matches.length() > 0 {
@@ -91,7 +92,7 @@ isolated resource function get [string assetTag]()
         return res;
     }
 }
-
+// same error if asset not found 
 isolated resource function get [string assetTag]/components() 
         returns http:Response|map<Component> {
 
@@ -107,3 +108,6 @@ isolated resource function get [string assetTag]/components()
     }
         }
 }
+// this one just returns all the componets otherwise 404 error 
+// lowkey i am tired but yeah 
+ 
