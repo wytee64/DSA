@@ -110,4 +110,3 @@ isolated resource function get [string assetTag]/components()
 }
 // this one just returns all the componets otherwise 404 error 
 // lowkey i am tired but yeah 
- 
