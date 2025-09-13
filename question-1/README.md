@@ -10,14 +10,14 @@ A system built with **Ballerina** that provides REST APIs to manage university a
 - Track maintenance schedules (weekly, monthly, yearly)
 - Handle work orders and tasks
 - View assets by faculty
-- In-memory storage with thread-safe operations
+- In-memory storage
 
 ---
 
 ## Tech Stack
 - **Language:** Ballerina
 - **Protocol:** REST (HTTP)
-- **Port:** 8080 for **service**
+- **Port:** 8080 for **service** and 9090 for **client**
 - **Storage:** In-memory map
 
 ---
@@ -27,7 +27,9 @@ A system built with **Ballerina** that provides REST APIs to manage university a
 - `GET /assets/getAsset/{assetTag}` → Get asset by tag
 - `PUT /assets/updateAsset/{assetTag}` → Update asset
 - `DELETE /assets/removeAsset/{assetTag}` → Delete asset
-- `GET /assets/faculty?faculty=SCIENCE` → Filter by faculty
+- `GET /assets/faculty?faculty` → Filter by faculty
 - `POST /assets/{tag}/components` → Add component
 - `GET /assets/{tag}/components` → List components
+- `PUT /assets/{tag}/comonents/{componentId}` → Update component
+- `DELETE /assets/{tag}/components/{componentId}` → Delete component
 
