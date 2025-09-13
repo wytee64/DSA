@@ -17,105 +17,52 @@ type Asset record {|
     map<Component> components;
 |};
 
-Asset[] asset = [];
+Asset[] assets = []; // declaring an empty arry, every asset created or updated will be stored here
 
-service /asset on new http:Listener(9090) {
-
-    resource function get .(@http:Query string? faculty) returns Asset[]|http:Response {
+service /assets on new http:Listener(9090) {
+// the one below i used a query which accepts a optinal parameter which will either return the array or http response(error)
+    resource function get .(@http:Query string? faculty) returns Asset[] {
          if faculty is string {
-            Asset[] filtered = [];
-            foreach var asset in asset {
-                if asset.faculty == faculty {
-                    filtered.push(asset);
+            Asset[] filtered = []; // this is creating an empty array called filtered when the faculty para is provided
+            foreach var asset in assets {
+                if asset.faculty == faculty { // looops through all the assets to look for the asset attached to that faculty
+                    filtered.push(asset); // now if a asset is matched that is attched to the faculty its added to the array called filtered
                 }
             }
-            return filtered;
+            return filtered; // return only filtered assets to the client 
          }
-         return asset;
-    }
-
+         return assets; // if no faculty was given all the assets return
+    } 
+// here we gettting asset by tag
     resource function  get [string assetTag]() returns Asset|http:Response {
-
-        foreach var asset in asset {
+// as always we loop through all assets
+        foreach var asset in assets {
             if asset.assetTag == assetTag {
                 return asset;
             }
             
         }
 
-
+// if no asset found it return the error below to the client side 
         http:Response resp = new;
         resp.statusCode = 404;
         resp.setPayload({"Error": "Asset not found" });
         return resp;
         
     }
-
+// here we are returning the componets 
     resource  function get [string assetTag]/components() returns map<Component>|http:Response {
-        foreach var asset in asset {
+        foreach var asset in assets {
             if asset.assetTag == assetTag {
                 return asset.components;
             }
-            
+            // if the asset tag match return asset's componets if not return thr error message!!
         }
         http:Response resp = new;
             resp.statusCode = 404;
             resp.setPayload({"Error:": "Asset not found"});
             return resp;
     }
-    resource function post .(@http:Payload Asset newAsset) returns http:Response {
-        
-        asset.push(newAsset);
-        http:Response resp = new;
-        resp.statusCode = 404;
-        resp.setPayload(newAsset);
-        return resp;
-        
-    }
-
-    resource function put [string assetTag](@http:Payload Asset updatedAsset) returns http:Response {
-        foreach var i in 0 ..< asset.length() {
-if asset[i].assetTag == assetTag{
-    asset[i] = updatedAsset;
-    http:Response resp = new;
-    resp.statusCode =  404;
-    resp.setJsonPayload(updatedAsset);
-    return resp;
-        }
-        
-    }
-    http:Response resp = new;
-    resp.statusCode = 404;
-    resp.setJsonPayload({"Error": "Asset not found"});
-    return resp;
-    }
-
-    resource function delete [string assetTag]() returns http:Response{
-        Asset[] remaining  = [];
-        boolean found = false;
-        foreach  var asset in asset {
-            if asset.assetTag == assetTag{
-                found =  true;
-                continue;
-            }
-            remaining.push(asset);
-            
-        }
-        asset = remaining;
-
-        http:Response resp = new;
-        if found {
-            resp.statusCode =204;
-        }
-        else {
-            resp.statusCode = 404;
-            resp.setJsonPayload ({ "Error": "Asset not found"});
-    
-        }
-        return resp;
-        
-    }
-
     
 }
 
