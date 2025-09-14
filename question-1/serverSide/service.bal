@@ -54,7 +54,7 @@ service /assets on new http:Listener(8080) {
         if (asset.name.trim().length() == 0) {return <http:BadRequest>{ body: { message:"name is needed" } };}
         if (asset.status.trim().length() == 0) {return <http:BadRequest>{ body: { message:"status is needed" } };}
         if (database.hasKey(asset.assetTag)) {return <http:Conflict>{ body: { message: "asset wit this tag already exists" } };} //checkin' if asset with that tag exists already still.
-        if (asset.status != "working") || (asset.status !="not_working")  { return <http:BadRequest>{body:{message:"asset status is not valid please enter working or not_working"}};}
+        //if (asset.status.trim() != "working") || (asset.status.trim() !="not_working")  { return <http:BadRequest>{body:{message:"asset status is not valid please enter working or not_working"}};}
         
         if (asset.components.length() == 0) {asset.components = {};}
         if (asset.schedules.length() == 0) {asset.schedules = {};}
@@ -67,7 +67,7 @@ service /assets on new http:Listener(8080) {
     }
 
     //get a specific asset using its tag
-    resource function get getAsset(string assetTag) returns json {
+    resource function get getAsset/[string assetTag]() returns json {
         Asset? asset = database[assetTag];
         if database.hasKey(assetTag) {
             return<json>asset;
@@ -75,14 +75,14 @@ service /assets on new http:Listener(8080) {
         return {message:"asset not found"};       
     }
 
-    resource function put updateAsset(string assertTag, @http:Payload Asset updated) returns json{
+    resource function put updateAsset/[string assertTag](@http:Payload Asset updated) returns json{
         if database.hasKey(assertTag){
             database[assertTag]=updated;
             return{message: "Aset updated", asset: <json>updated};
         }
     }
 
-    resource function delete removeAsset(string assertTag) returns json{
+    resource function delete removeAsset/[string assertTag]() returns json{
         if database.hasKey(assertTag){
             _ = database.remove(assertTag);
             return{message: "Asset deleted"};
@@ -95,7 +95,7 @@ service /assets on new http:Listener(8080) {
         //checkin if required fields are actually provided
         if (comp.name.trim().length() ==0) {return <http:BadRequest>{body:{message:"name is needed"}};}
         if (comp.status.trim().length()== 0 ) {return <http:BadRequest>{body:{message:"status is needed"}};}
-        if (comp.status != "OK") || (comp.status != "FAULTY") || (comp.status != "REPLACED") { return <http:BadRequest>{body:{message:"component status is not valid please enter OK, FAULTY, or REPLACED"}};}
+        //if (comp.status != "OK") || (comp.status != "FAULTY") || (comp.status != "REPLACED") { return <http:BadRequest>{body:{message:"component status is not valid please enter OK, FAULTY, or REPLACED"}};}
 
         //checkin if provided id is a string
         string newId = comp.id is string ? <string>comp.id : "";
@@ -158,18 +158,31 @@ service /assets on new http:Listener(8080) {
             return <http:Ok>{ body: { message: "component deleted" } };
         }
     }
-    // the one below i used a query which accepts a optinal parameter which will either return the array or http response(error)
-    resource function get faculty(string? faculty) returns Asset[] {
-         if faculty is string {
-            Asset[] filtered = []; // this is creating an empty array called filtered when the faculty para is provided
-            foreach var asset in assets {
-                if asset.faculty == faculty { // looops through all the assets to look for the asset attached to that faculty
-                    filtered.push(asset); // now if a asset is matched that is attched to the faculty its added to the array called filtered
+    resource function get faculty/[string faculty]() returns http:Ok {
+
+        Asset[] results = []; // empty Array of Asset called results
+
+        foreach var [_, asset] in database.entries() { // goes through the database which contains all assets 
+        // and then database.entries returns a list of turples string,Asset 
+        //where assetTag is the key for asset and asset is the value for Asset Record
+
+            // checks if the faculty is provided
+            if faculty.trim() != "all" {
+
+            // check if the current asset's faculty field matches the query parameter
+                if asset.faculty == faculty {
+
+                    results.push(asset.clone()); // adds a copy of the asset to the results array
+                    // clone() is good practice to prevent accidental modification
+
                 }
+            } 
+            
+            else {
+                results.push(asset.clone()); // if the faculty provided is all it will return all assets
             }
-            return filtered; // return only filtered assets to the client 
-         }
-         return assets; // if no faculty was given all the assets return
-    } 
+        }
+        return <http:Ok>{ body: results }; // returns the error message with the results array
+    }
 
 }
