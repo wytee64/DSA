@@ -27,7 +27,7 @@ A system built with **Ballerina** that provides REST APIs to manage university a
 - `GET /assets/getAsset/{assetTag}` → Get asset by tag
 - `PUT /assets/updateAsset/{assetTag}` → Update asset
 - `DELETE /assets/removeAsset/{assetTag}` → Delete asset
-- `GET /assets/faculty?faculty` → Filter by faculty
+- `GET /assets/faculty/{faculty}` → Filter by faculty or get all assets
 - `POST /assets/{tag}/components` → Add component
 - `GET /assets/{tag}/components` → List components
 - `PUT /assets/{tag}/comonents/{componentId}` → Update component
