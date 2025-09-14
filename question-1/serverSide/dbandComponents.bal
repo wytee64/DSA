@@ -1,14 +1,14 @@
 import ballerina/http;
 import ballerina/uuid;
 
-type Component record {|
+public type Component record {|
     string id?;
     string name;
     string? serial;
     string status = "OK"; // "OK", "FAULTY", "REPLACED"
 |};
 
-type Asset record {|
+public type Asset record {|
     string assetTag;
     string name;
     string faculty;
@@ -18,7 +18,7 @@ type Asset record {|
     map<Component> components;
 |};
 
-final map<Asset> database = {};
+public final map<Asset> database = {};
 
 service /assets on new http:Listener(8080) {
 resource function post addAsset(@http:Payload Asset asset) returns http:Created|http:Conflict|http:BadRequest {
