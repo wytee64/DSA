@@ -1,8 +1,8 @@
 [package]
-org = "user"
-name = "nust_assets_service"
+org = "raplo"
+name = "clentSide"
 version = "0.1.0"
-distribution = "2201.12.9"
+distribution = "2201.12.7"
 
 [build-options]
 observabilityIncluded = true
