@@ -1,8 +1,8 @@
 [package]
-org = "raplo"
-name = "ClientSide"
+org = "user"
+name = "nust_assets_client"
 version = "0.1.0"
-distribution = "2201.12.7"
+distribution = "2201.12.9"
 
 [build-options]
 observabilityIncluded = true
