@@ -54,7 +54,7 @@ service /assets on new http:Listener(8080) {
         if (asset.name.trim().length() == 0) {return <http:BadRequest>{ body: { message:"name is needed" } };}
         if (asset.status.trim().length() == 0) {return <http:BadRequest>{ body: { message:"status is needed" } };}
         if (database.hasKey(asset.assetTag)) {return <http:Conflict>{ body: { message: "asset wit this tag already exists" } };} //checkin' if asset with that tag exists already still.
-        //if (asset.status.trim() != "working") || (asset.status.trim() !="not_working")  { return <http:BadRequest>{body:{message:"asset status is not valid please enter working or not_working"}};}
+        if (asset.status.toLowerAscii().trim() != "working") || (asset.status.toLowerAscii().trim() !="not_working")  { return <http:BadRequest>{body:{message:"asset status is not valid please enter working or not_working"}};}
         
         if (asset.components.length() == 0) {asset.components = {};}
         if (asset.schedules.length() == 0) {asset.schedules = {};}
@@ -95,7 +95,7 @@ service /assets on new http:Listener(8080) {
         //checkin if required fields are actually provided
         if (comp.name.trim().length() ==0) {return <http:BadRequest>{body:{message:"name is needed"}};}
         if (comp.status.trim().length()== 0 ) {return <http:BadRequest>{body:{message:"status is needed"}};}
-        //if (comp.status != "OK") || (comp.status != "FAULTY") || (comp.status != "REPLACED") { return <http:BadRequest>{body:{message:"component status is not valid please enter OK, FAULTY, or REPLACED"}};}
+        if (comp.status.toUpperAscii().trim() != "OK") || (comp.status.toUpperAscii().trim() != "FAULTY") || (comp.status.toUpperAscii().trim() != "REPLACED") { return <http:BadRequest>{body:{message:"component status is not valid please enter OK, FAULTY, or REPLACED"}};}
 
         //checkin if provided id is a string
         string newId = comp.id is string ? <string>comp.id : "";
@@ -130,7 +130,12 @@ service /assets on new http:Listener(8080) {
     }
 
 
-    resource function put [string tag]/components/[string compId](@http:Payload Component updated) returns http:Ok|http:NotFound {
+    resource function put [string tag]/components/[string compId](@http:Payload Component updated) returns http:Ok|http:NotFound|http:BadRequest {
+        if (updated.name.trim().length() ==0) {return <http:BadRequest>{body:{message:"name is needed"}};}
+        if (updated.status.trim().length()== 0 ) {return <http:BadRequest>{body:{message:"status is needed"}};}
+        if (updated.status.toUpperAscii().trim() != "OK") || (updated.status.toUpperAscii().trim() != "FAULTY") || (updated.status.toUpperAscii().trim() != "REPLACED") { return <http:BadRequest>{body:{message:"component status is not valid please enter OK, FAULTY, or REPLACED"}};}
+
+        
         lock {
             Asset|() asset = database[tag];
             if (asset == ()) {return <http:NotFound>{body:{message:"asset not found"}};}
