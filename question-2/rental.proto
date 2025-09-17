@@ -10,41 +10,18 @@ message Car {
     string status = 7;
 }
 
-message User {
-    string userId = 1;
-    string name = 2;
-    string role = 3;
-}
-
-message CartItem {
-    string plateNumber = 1;
-    string startDate = 2;
-    string endDate = 3;
-}
-
-message Reservation {
-    string reservationId = 1;
-    string customerId = 2;
-    repeated CartItem items = 3;
-    double totalPrice = 4;
-}
-
-
 message AddCarRequest {
-    string make = 1;
-    string model = 2;
-    int32 year = 3;
-    double dailyPrice = 4;
-    int32 mileage = 5;
-    string plate = 6;
+    string plate = 1;
+    string make = 2;
+    string model = 3;
+    int32 year = 4;
+    double dailyPrice = 5;
+    int32 mileage = 6;
     string status = 7;
 }
+
 message AddCarResponse {
     Car car = 1;
-}
-
-message CreateUsersResponse {
-    repeated User users = 1;
 }
 
 message UpdateCarRequest {
@@ -75,6 +52,23 @@ message SearchCarResponse {
     Car car = 2;
 }
 
+
+message User {
+    string userId = 1;
+    string name = 2;
+    string role = 3;
+}
+
+message CreateUsersResponse {
+    repeated User users = 1;
+}
+
+message CartItem {
+    string plateNumber = 1;
+    string startDate = 2;
+    string endDate = 3;
+}
+
 message AddToCartRequest {
     string customerId = 1;
     string plate = 2;
@@ -84,6 +78,12 @@ message AddToCartRequest {
 message AddToCartResponse {
     bool success = 1;
     CartItem item = 2;
+}
+message Reservation {
+    string reservationId = 1;
+    string customerId = 2;
+    repeated CartItem items = 3;
+    double totalPrice = 4;
 }
 
 message PlaceReservationRequest {
@@ -97,12 +97,12 @@ message PlaceReservationResponse {
 
 
 service CarRental {
-    rpc add_car(AddCarRequest) returns (AddCarResponse);
-    rpc create_users(stream User) returns (CreateUsersResponse);
-    rpc update_car(UpdateCarRequest) returns (UpdateCarResponse);
-    rpc remove_car(RemoveCarRequest) returns (RemoveCarResponse);
-    rpc list_available_cars(ListAvailableCarsRequest) returns (stream Car);
-    rpc search_car(SearchCarRequest) returns (SearchCarResponse);
-    rpc add_to_cart(AddToCartRequest) returns (AddToCartResponse);
-    rpc place_reservation(PlaceReservationRequest) returns (PlaceReservationResponse);
+    rpc addCar(AddCarRequest) returns (AddCarResponse);
+    rpc createUsers(stream User) returns (CreateUsersResponse);
+    rpc updateCar(UpdateCarRequest) returns (UpdateCarResponse);
+    rpc removeCar(RemoveCarRequest) returns (RemoveCarResponse);
+    rpc listAvailableCars(ListAvailableCarsRequest) returns (stream Car);
+    rpc searchCar(SearchCarRequest) returns (SearchCarResponse);
+    rpc addToCart(AddToCartRequest) returns (AddToCartResponse);
+    rpc placeReservation(PlaceReservationRequest) returns (PlaceReservationResponse);
 }
