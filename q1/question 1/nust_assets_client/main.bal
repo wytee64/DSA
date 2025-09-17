@@ -29,7 +29,7 @@ public function main() returns error? {
         status: "ACTIVE",
         acquiredDate: "2024-03-10",
         components: [],
-        schedules: [{ id: "s1", cadence: "quarterly", nextDue: "2025-04-01" }],
+        schedules: [{ id: "s1", cadence: "quarterly", nextDue: "2025-04-01" }], // creating asset with schedule
         workOrders: []
     };
     http:Response r2 = check c->put("/assets/EQ-001", u);
@@ -47,7 +47,7 @@ public function main() returns error? {
     time:Utc now = time:utcNow();
     string today = now.toString().substring(0, 10);
     // Either concat...
-    http:Response r5 = check c->get("/assets/overdue?today=" + today);
+    http:Response r5 = check c->get("/assets/overdue?today=" + today);// check if schedule is overdue
     // ...or use interpolation: http:Response r5 = check c->get(string /assets/overdue?today=${today});
     io:println("OVERDUE:", check r5.getJsonPayload());
 
