@@ -1,4 +1,38 @@
 import ballerina/grpc;
+type User record {
+    string user_id;
+    string name;
+    string role; //admin or customer
+};
+
+type Car record {
+    string plate;
+    string make;
+    string model;
+    int year;
+    float dailyPrice;
+    int mileage;
+    string status; // available or unavailable
+};
+
+type Reservation record {
+    string reservationId;
+    string customerId;
+    CartItem[] items;
+    float totalPrice;
+};
+
+type CartItem record {
+    string plate;
+    string startDate;
+    string endDate;
+};
+
+
+map<Car> cars = {};
+map<User> users = {};
+map<CartItem[]> carts = {};
+map<Reservation> reservations = {};
 
 listener grpc:Listener ep = new (9090);
 
