@@ -45,28 +45,20 @@ final map<Asset> database = {};
 
 service /assets on new http:Listener(8080) {
     resource function post addAsset(@http:Payload Asset asset) returns http:Created|http:Conflict|http:BadRequest {
-        //makin sure theres no missin anything still before addin an asset still
-        if (asset.assetTag.trim().length() == 0) {
-            return <http:BadRequest>{body: {message: "asset tag is needed"}};
-        }
-        if (asset.acquiredDate.trim().length() == 0) {
-            return <http:BadRequest>{body: {message: "acquired date is needed"}};
-        }
-        if (asset.department.trim().length() == 0) {
-            return <http:BadRequest>{body: {message: "departmet is needed"}};
-        }
-        if (asset.faculty.trim().length() == 0) {
-            return <http:BadRequest>{body: {message: "faculty is needed"}};
-        }
-        if (asset.name.trim().length() == 0) {
-            return <http:BadRequest>{body: {message: "name is needed"}};
-        }
-        if (asset.status.trim().length() == 0) {
-            return <http:BadRequest>{body: {message: "status is needed"}};
-        }
-        if (database.hasKey(asset.assetTag)) {
-            return <http:Conflict>{body: {message: "asset wit this tag already exists"}};
-        } //checkin' if asset with that tag exists already still.
+        //makin sure theres no missin anything still before addin an asset stil
+        if (asset.assetTag.trim().length() == 0){return <http:BadRequest>{ body: { message:"asset tag is needed" } };}
+        if (asset.acquiredDate.trim().length() == 0) {return <http:BadRequest>{ body: { message:"acquired date is needed" } };}
+        if (asset.department.trim().length() == 0) {return <http:BadRequest>{ body: { message:"departmet is needed" } };}
+        if (asset.faculty.trim().length() == 0) {return <http:BadRequest>{ body: { message:"faculty is needed" } };}
+        if (asset.name.trim().length() == 0) {return <http:BadRequest>{ body: { message:"name is needed" } };}
+        if (asset.status.trim().length() == 0) {return <http:BadRequest>{ body: { message:"status is needed" } };}
+        if (database.hasKey(asset.assetTag)) {return <http:Conflict>{ body: { message: "asset wit this tag already exists" } };} //checkin' if asset with that tag exists already still.
+        
+        if (asset.components.length() == 0) {asset.components = {};}
+        if (asset.schedules.length() == 0) {asset.schedules = {};}
+        if (asset.workOrders.length() == 0) {asset.workOrders = {};}
+
+        //checkin' if asset with that tag exists already still.
         if (asset.status.toUpperAscii().trim() != "ACTIVE") || (asset.status.toUpperAscii().trim() != "UNDER_REPAIR") || (asset.status.toUpperAscii().trim() != "DISPOSED") {
             return <http:BadRequest>{body: {message: "asset status is not valid please enter ACTIVE, UNDER_REPAIR, or DISPOSED"}};
         }
@@ -80,6 +72,7 @@ service /assets on new http:Listener(8080) {
         if (asset.workOrders.length() == 0) {
             asset.workOrders = {};
         }
+
 
         lock {
             database[asset.assetTag] = asset; //savin the asset to the database
@@ -114,12 +107,9 @@ service /assets on new http:Listener(8080) {
     resource function post [string tag]/components(@http:Payload Component comp) returns http:Created|http:NotFound|http:Conflict|http:BadRequest {
 
         //checkin if required fields are actually provided
-        if (comp.name.trim().length() == 0) {
-            return <http:BadRequest>{body: {message: "name is needed"}};
-        }
-        if (comp.status.trim().length() == 0) {
-            return <http:BadRequest>{body: {message: "status is needed"}};
-        }
+        if (comp.name.trim().length() ==0) {return <http:BadRequest>{body:{message:"name is needed"}};}
+        if (comp.status.trim().length()== 0 ) {return <http:BadRequest>{body:{message:"status is needed"}};}
+
         if (comp.status.toUpperAscii().trim() != "OK") || (comp.status.toUpperAscii().trim() != "FAULTY") || (comp.status.toUpperAscii().trim() != "REPLACED") {
             return <http:BadRequest>{body: {message: "component status is not valid please enter OK, FAULTY, or REPLACED"}};
         }
@@ -165,7 +155,7 @@ service /assets on new http:Listener(8080) {
         }
         return <http:Ok>{body: components_array.clone()};
     }
-
+    
     resource function put [string tag]/components/[string compId](@http:Payload Component updated) returns http:Ok|http:NotFound|http:BadRequest {
         if (updated.name.trim().length() == 0) {
             return <http:BadRequest>{body: {message: "name is needed"}};
@@ -233,5 +223,132 @@ service /assets on new http:Listener(8080) {
         }
         return <http:Ok>{body: results}; // returns the error message with the results array
     }
+       // created a new work order
+    resource function post [string tag]/workorders(@http:Payload WorkOrder wo) returns http:Created|http:NotFound|http:BadRequest {
+        if (wo.title.trim().length() == 0) {
+            return <http:BadRequest>{body:{message:"title is needed"}};
+        }
+        if (wo.description.trim().length() == 0) {
+            return <http:BadRequest>{body:{message:"description is needed"}};
+        }
+        // check if the status is allowed
+        if (wo.status != "open" && wo.status != "in_progress" && wo.status != "closed") {
+            return <http:BadRequest>{body:{message:"status must be open, in_progress, or closed"}};
+        }
 
+        Asset|() asset = database[tag];
+        if (asset == ()) {
+            return <http:NotFound>{body:{message:"asset not found"}};
+        }
+        // make a new ID for this work order
+        string newId = "WO-" + asset.workOrders.length().toString();
+        wo.id = newId;
+        if (wo.tasks.length() == 0) {
+            wo.tasks = {};
+        }
+
+        asset.workOrders[newId] = wo.clone();
+        database[tag] = asset;
+
+        return <http:Created>{body:{message:"work order added", workOrder: wo.clone()}};
+    }
+
+    // get all work orders
+    resource function get [string tag]/workorders() returns http:Ok|http:NotFound {
+        Asset|() asset = database[tag];
+        if (asset == ()) {
+            return <http:NotFound>{body:{message:"asset not found"}};
+        }
+
+        WorkOrder[] woArray = [];
+        foreach var [_, w] in asset.workOrders.entries() {
+            woArray.push(w);
+        }
+        return <http:Ok>{body: woArray.clone()};
+    }
+
+    // update work order details or status
+    resource function put [string tag]/workorders/[string woId](@http:Payload WorkOrder updated) returns http:Ok|http:NotFound {
+        Asset|() asset = database[tag];
+        if (asset == ()) {
+            return <http:NotFound>{body:{message:"asset not found"}};
+        }
+        if !asset.workOrders.hasKey(woId) {
+            return <http:NotFound>{body:{message:"work order not found"}};
+        }
+
+        updated.id = woId;
+        asset.workOrders[woId] = updated.clone();
+        database[tag] = asset;
+
+        return <http:Ok>{body:{message:"work order updated"}};
+    }
+
+    // add a task under a work order
+    resource function post [string tag]/workorders/[string woId]/tasks(@http:Payload Task task) returns http:Created|http:NotFound|http:BadRequest {
+        if (task.description.trim().length() == 0) {
+            return <http:BadRequest>{body:{message:"description is needed"}};
+        }
+        if (task.status != "pending" && task.status != "done") {
+            return <http:BadRequest>{body:{message:"status must be pending or done"}};
+        }
+
+        Asset|() asset = database[tag];
+        if (asset == ()) {
+            return <http:NotFound>{body:{message:"asset not found"}};
+        }
+        if !asset.workOrders.hasKey(woId) {
+            return <http:NotFound>{body:{message:"work order not found"}};
+        }
+
+        WorkOrder wo = <WorkOrder>asset.workOrders[woId];
+        string newTaskId = "T-" + wo.tasks.length().toString();
+        task.id = newTaskId;
+
+        wo.tasks[newTaskId] = task.clone();
+        asset.workOrders[woId] = wo;
+        database[tag] = asset;
+
+        return <http:Created>{body:{message:"task added", task: task.clone()}};
+    }
+
+    // get all tasks of a work order
+    resource function get [string tag]/workorders/[string woId]/tasks() returns http:Ok|http:NotFound {
+        Asset|() asset = database[tag];
+        if (asset == ()) {
+            return <http:NotFound>{body:{message:"asset not found"}};
+        }
+        if !asset.workOrders.hasKey(woId) {
+            return <http:NotFound>{body:{message:"work order not found"}};
+        }
+
+        WorkOrder wo = <WorkOrder>asset.workOrders[woId];
+        Task[] tasksArray = [];
+        foreach var [_, t] in wo.tasks.entries() {
+            tasksArray.push(t);
+        }
+        return <http:Ok>{body: tasksArray.clone()};
+    }
+
+    // delete a task from a work order
+    resource function delete [string tag]/workorders/[string woId]/tasks/[string taskId]() returns http:Ok|http:NotFound {
+        Asset|() asset = database[tag];
+        if (asset == ()) {
+            return <http:NotFound>{body:{message:"asset was not found"}};
+        }
+        if !asset.workOrders.hasKey(woId) {
+            return <http:NotFound>{body:{message:"work order was not found"}};
+        }
+
+        WorkOrder wo = <WorkOrder>asset.workOrders[woId];
+        if !wo.tasks.hasKey(taskId) {
+            return <http:NotFound>{body:{message:"task was not found"}};
+        }
+
+        _ = wo.tasks.remove(taskId);
+        asset.workOrders[woId] = wo;
+        database[tag] = asset;
+
+        return <http:Ok>{body:{message:"task was deleted"}};
+    }
 }
