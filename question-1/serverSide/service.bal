@@ -54,7 +54,7 @@ service /assets on new http:Listener(8080) {
         if (asset.name.trim().length() == 0) {return <http:BadRequest>{ body: { message:"name is needed" } };}
         if (asset.status.trim().length() == 0) {return <http:BadRequest>{ body: { message:"status is needed" } };}
         if (database.hasKey(asset.assetTag)) {return <http:Conflict>{ body: { message: "asset wit this tag already exists" } };} //checkin' if asset with that tag exists already still.
-        if (asset.status.toLowerAscii().trim() != "working") || (asset.status.toLowerAscii().trim() !="not_working")  { return <http:BadRequest>{body:{message:"asset status is not valid please enter working or not_working"}};}
+        if (asset.status.toUpperAscii().trim() != "ACTIVE") || (asset.status.toUpperAscii().trim() !="UNDER_REPAIR")|| (asset.status.toUpperAscii().trim() !="DISPOSED")  { return <http:BadRequest>{body:{message:"asset status is not valid please enter wACTIVE, UNDER_REPAIR, or DISPOSED"}};}
         
         if (asset.components.length() == 0) {asset.components = {};}
         if (asset.schedules.length() == 0) {asset.schedules = {};}
