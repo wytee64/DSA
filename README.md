@@ -1,12 +1,12 @@
 # DSA Ballerina Projects
 
-This repo contains two distributed systems projects built with **Ballerina** — a cloud-native programming language for integration and network services.  
+This repo contains two distributed systems projects built with **Ballerina**.  
 
 ---
 
 ## Repository Structure
-question-1 # Asset Management System (REST API)
-question-2 # Car Rental System (gRPC)
+- question-1 # Asset Management System (REST API)
+- question-2 # Car Rental System (gRPC)
 
 
 ---
@@ -41,6 +41,14 @@ A REST API for managing university assets, their components, maintenance schedul
 | GET | /assets/{tag}/components | List components |
 | PUT | /assets/{tag}/components/{componentId} | Update component |
 | DELETE | /assets/{tag}/components/{componentId} | Delete component |
+| POST | /assets/{tag}/workorders | Add a work order |
+| GET | /assets/{tag}/workorders | Get all work orders |
+| PUT | /assets/{tag}/workorders/{woID} | Update work order |
+| POST | /assets/{tag}/workorders/{woID}/tasks | Add a task |
+| GET | /assets/{tag}/workorders/{woID}/tasks | Get all tasks |
+| DELETE | /assets/{tag}/workorders/{woID}/tasks | Delete task |
+
+
 
 ### Data Models
 - **Asset:** Metadata about university assets  
@@ -93,16 +101,14 @@ A distributed car rental system using **gRPC**. Supports real-time car managemen
 ## Tech Stack
 
 ### Common
-- **Language:** Ballerina (Swan Lake)  
+- **Language:** Ballerina 
 - **Build Tool:** Ballerina CLI  
 - **IDE:** VS Code + Ballerina extension  
 
 ### Question 1
 - Ballerina HTTP module  
-- JSON serialization  
-- HTTP error handling  
 
 ### Question 2
 - Ballerina gRPC module  
-- Protocol Buffers (.proto)  
-- Bidirectional streaming support  
+- Protocol Buffers  
+- Bidirectional streaming
