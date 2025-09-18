@@ -1,15 +1,10 @@
 # DSA Ballerina Projects
 
-This repo contains two distributed systems projects built with **Ballerina** — a cloud-native programming language for integration and network services.  
-
----
+This repo contains two distributed systems projects built with **Ballerina**.  
 
 ## Repository Structure
-question-1 # Asset Management System (REST API)
-question-2 # Car Rental System (gRPC)
-
-
----
+- question-1 # Asset Management System (REST API)
+- question-2 # Car Rental System (gRPC)
 
 ## Question 1: Asset Management System (REST API)
 **Location:** `question-1/`  
@@ -17,17 +12,18 @@ question-2 # Car Rental System (gRPC)
 A REST API for managing university assets, their components, maintenance schedules, and work orders. Uses in-memory storage with Ballerina’s HTTP module.
 
 ### Architecture
-- **Protocol:** REST (HTTP/1.1)  
-- **Ports:** 8080 (Service), 9090 (Client)  
-- **Storage:** In-memory maps  
-- **Communication:** Synchronous  
+- **Language:** Ballerina
+- **Protocol:** REST (HTTP)
+- **Port:** 8080 **(Service)**
+- **Storage:** In-memory map  
 
 ### Features
-- CRUD operations for assets  
+- CRUD operations for assets (add, update, delete, view)
 - Component tracking for each asset  
-- Maintenance scheduling (weekly/monthly/yearly)  
-- Work order management  
+- Maintenance scheduling (weekly, monthly, yearly)
+- Handle work orders and tasks  
 - Faculty-based filtering  
+- In-memory storage
 
 ### API Endpoints
 | Method | Endpoint | Description |
@@ -41,13 +37,19 @@ A REST API for managing university assets, their components, maintenance schedul
 | GET | /assets/{tag}/components | List components |
 | PUT | /assets/{tag}/components/{componentId} | Update component |
 | DELETE | /assets/{tag}/components/{componentId} | Delete component |
+| POST | /assets/{tag}/workorders | Add a work order |
+| GET | /assets/{tag}/workorders | Get all work orders |
+| PUT | /assets/{tag}/workorders/{woID} | Update work order |
+| POST | /assets/{tag}/workorders/{woID}/tasks | Add a task |
+| GET | /assets/{tag}/workorders/{woID}/tasks | Get all tasks |
+| DELETE | /assets/{tag}/workorders/{woID}/tasks | Delete task |
 
 ### Data Models
 - **Asset:** Metadata about university assets  
 - **Component:** Parts of an asset  
 - **Maintenance:** Scheduled maintenance records  
 - **WorkOrder:** Maintenance work orders  
-- **Task:** Tasks within work orders  
+- **Task:** Tasks within work orders
 
 ---
 
@@ -88,21 +90,17 @@ A distributed car rental system using **gRPC**. Supports real-time car managemen
 - **CartItem:** Items in shopping cart  
 - **Reservation:** Full booking record  
 
----
-
 ## Tech Stack
 
 ### Common
-- **Language:** Ballerina (Swan Lake)  
+- **Language:** Ballerina 
 - **Build Tool:** Ballerina CLI  
 - **IDE:** VS Code + Ballerina extension  
 
 ### Question 1
 - Ballerina HTTP module  
-- JSON serialization  
-- HTTP error handling  
 
 ### Question 2
 - Ballerina gRPC module  
-- Protocol Buffers (.proto)  
-- Bidirectional streaming support  
+- Protocol Buffers  
+- Bidirectional streaming
