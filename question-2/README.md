@@ -1,1 +1,0 @@
-# Remote invocation: CAR RENTAL SYSTEM using gRPC
