@@ -59,7 +59,7 @@ service /assets on new http:Listener(8080) {
         if (asset.workOrders.length() == 0) {asset.workOrders = {};}
 
         //checkin' if asset with that tag exists already still.
-        if (asset.status.toUpperAscii().trim() != "ACTIVE") || (asset.status.toUpperAscii().trim() != "UNDER_REPAIR") || (asset.status.toUpperAscii().trim() != "DISPOSED") {
+        if (asset.status.toUpperAscii().trim() != "ACTIVE") && (asset.status.toUpperAscii().trim() != "UNDER_REPAIR") && (asset.status.toUpperAscii().trim() != "DISPOSED") {
             return <http:BadRequest>{body: {message: "asset status is not valid please enter ACTIVE, UNDER_REPAIR, or DISPOSED"}};
         }
 
@@ -110,7 +110,7 @@ service /assets on new http:Listener(8080) {
         if (comp.name.trim().length() ==0) {return <http:BadRequest>{body:{message:"name is needed"}};}
         if (comp.status.trim().length()== 0 ) {return <http:BadRequest>{body:{message:"status is needed"}};}
 
-        if (comp.status.toUpperAscii().trim() != "OK") || (comp.status.toUpperAscii().trim() != "FAULTY") || (comp.status.toUpperAscii().trim() != "REPLACED") {
+        if (comp.status.toUpperAscii().trim() != "OK") && (comp.status.toUpperAscii().trim() != "FAULTY") && (comp.status.toUpperAscii().trim() != "REPLACED") {
             return <http:BadRequest>{body: {message: "component status is not valid please enter OK, FAULTY, or REPLACED"}};
         }
 
@@ -163,7 +163,7 @@ service /assets on new http:Listener(8080) {
         if (updated.status.trim().length() == 0) {
             return <http:BadRequest>{body: {message: "status is needed"}};
         }
-        if (updated.status.toUpperAscii().trim() != "OK") || (updated.status.toUpperAscii().trim() != "FAULTY") || (updated.status.toUpperAscii().trim() != "REPLACED") {
+        if (updated.status.toUpperAscii().trim() != "OK") && (updated.status.toUpperAscii().trim() != "FAULTY") && (updated.status.toUpperAscii().trim() != "REPLACED") {
             return <http:BadRequest>{body: {message: "component status is not valid please enter OK, FAULTY, or REPLACED"}};
         }
 
