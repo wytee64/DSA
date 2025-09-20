@@ -12,7 +12,7 @@ type Component record {|
 type Maintenance record {|
     string id?;
     string maintenanceType;   // weekly,monthly,yearly
-    string nextDueDate;       // year then month then date (YYYY-MM-DD)
+    string nextDueDate;      // year then month then date (YYYY-MM-DD)
     string status;
 |};
 
@@ -135,6 +135,22 @@ service /assets on new http:Listener(8080) {
         if (asset.schedules.length()  == 0) { asset.schedules  = {}; }
         if (asset.workOrders.length() == 0) { asset.workOrders = {}; }
 
+        //checkin' if asset with that tag exists already still.
+        if (asset.status.toUpperAscii().trim() != "ACTIVE") && (asset.status.toUpperAscii().trim() != "UNDER_REPAIR") && (asset.status.toUpperAscii().trim() != "DISPOSED") {
+            return <http:BadRequest>{body: {message: "asset status is not valid please enter ACTIVE, UNDER_REPAIR, or DISPOSED"}};
+        }
+
+        if (asset.components.length() == 0) {
+            asset.components = {};
+        }
+        if (asset.schedules.length() == 0) {
+            asset.schedules = {};
+        }
+        if (asset.workOrders.length() == 0) {
+            asset.workOrders = {};
+        }
+
+
         lock {
             database[asset.assetTag] = asset; // savin the asset to the database
             return <http:Created>{ body:{ message:"asset added", asset:asset.clone() } };
@@ -227,12 +243,12 @@ service /assets on new http:Listener(8080) {
             Asset|() asset = database[tag];
             if (asset == ()) { return <http:NotFound>{ body:{ message:"asset not found" } }; }
             if !asset.components.hasKey(compId) {
-                return <http:NotFound>{ body: { message: "component not found" } };
+                return <http:NotFound>{body: {message: "component not found"}};
             }
             updated.id = compId;
             asset.components[compId] = updated.clone();
             database[tag] = asset;
-            return <http:Ok>{ body: { message: "component updated", component: updated.clone() } };
+            return <http:Ok>{body: {message: "component updated", component: updated.clone()}};
         }
     }
 
@@ -240,14 +256,14 @@ service /assets on new http:Listener(8080) {
         lock {
             Asset|() asset = database[tag];
             if (asset == ()) {
-                return <http:NotFound>{ body: { message: "asset not found" } };
+                return <http:NotFound>{body: {message: "asset not found"}};
             }
             if !asset.components.hasKey(compId) {
-                return <http:NotFound>{ body: { message: "component not found" } };
+                return <http:NotFound>{body: {message: "component not found"}};
             }
             _ = asset.components.remove(compId);
             database[tag] = asset;
-            return <http:Ok>{ body: { message: "component deleted" } };
+            return <http:Ok>{body: {message: "component deleted"}};
         }
     }
 
@@ -266,7 +282,36 @@ service /assets on new http:Listener(8080) {
                 results.push(asset.clone()); // if the faculty provided is all it will return all assets
             }
         }
-        return <http:Ok>{ body: results }; // returns the error message with the results array
+        return <http:Ok>{body: results}; // returns the error message with the results array
+    }
+       // created a new work order
+    resource function post [string tag]/workorders(@http:Payload WorkOrder wo) returns http:Created|http:NotFound|http:BadRequest {
+        if (wo.title.trim().length() == 0) {
+            return <http:BadRequest>{body:{message:"title is needed"}};
+        }
+        if (wo.description.trim().length() == 0) {
+            return <http:BadRequest>{body:{message:"description is needed"}};
+        }
+        // check if the status is allowed
+        if (wo.status != "open" && wo.status != "in_progress" && wo.status != "closed") {
+            return <http:BadRequest>{body:{message:"status must be open, in_progress, or closed"}};
+        }
+
+        Asset|() asset = database[tag];
+        if (asset == ()) {
+            return <http:NotFound>{body:{message:"asset not found"}};
+        }
+        // make a new ID for this work order
+        string newId = "WO-" + asset.workOrders.length().toString();
+        wo.id = newId;
+        if (wo.tasks.length() == 0) {
+            wo.tasks = {};
+        }
+
+        asset.workOrders[newId] = wo.clone();
+        database[tag] = asset;
+
+        return <http:Created>{body:{message:"work order added", workOrder: wo.clone()}};
     }
 
     // ===================== SCHEDULES =====================

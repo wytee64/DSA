@@ -1,6 +1,5 @@
 import ballerina/grpc;
 
-
 listener grpc:Listener ep = new (9090);
 
 @grpc:Descriptor {value: RENTAL_DESC}
