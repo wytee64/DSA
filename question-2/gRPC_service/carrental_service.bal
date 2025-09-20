@@ -5,6 +5,10 @@ listener grpc:Listener ep = new (9090);
 @grpc:Descriptor {value: RENTAL_DESC}
 service "CarRental" on ep {
 
+ remote function searchCar(SearchCarRequest req) returns SearchCarResponse {
+    Car? car = getCarByPlate(req.plate);
+    if car is () {
+        return { found: false, car: {} };
     // -------------------- ADMIN: add_car --------------------
     remote function addCar(AddCarRequest value) returns AddCarResponse|error {
         // Normalize & validate
@@ -83,6 +87,32 @@ service "CarRental" on ep {
 
         return { car: current };
     }
+    return { found: true, car: car };
+}
+
+remote function addToCart(AddToCartRequest req) returns AddToCartResponse {
+    CartItem item = {
+        plateNumber: req.plate,
+        startDate: req.startDate,
+        endDate: req.endDate
+    };
+    boolean success = addToCart(req.customerId, item);
+    return { success: success, item: item };
+}
+
+remote function placeReservation(PlaceReservationRequest req) returns PlaceReservationResponse {
+    CartItem[] items = getCart(req.customerId);
+    if items.length() == 0 {
+        return { success: false, reservation: {}, message: "Cart is empty" };
+    }
+
+    Reservation? reservation = createReservation(req.customerId, items);
+    if reservation is () {
+        return { success: false, reservation: {}, message: "Some cars not available or invalid dates" };
+    }
+
+    return { success: true, reservation: reservation, message: "Reservation successful" };
+}
 
     // -------------------- ADMIN: remove_car --------------------
     remote function removeCar(RemoveCarRequest value) returns RemoveCarResponse|error {
@@ -105,24 +135,20 @@ service "CarRental" on ep {
         return { cars: remaining };
     }
 
-    // -------------------- (left as stubs for later) --------------------
-    remote function searchCar(SearchCarRequest value) returns SearchCarResponse|error {
-        return error("searchCar: not implemented yet");
-    }
 
-    remote function addToCart(AddToCartRequest value) returns AddToCartResponse|error {
-        return error("addToCart: not implemented yet");
+remote function listAvailableCars(ListAvailableCarsRequest req) returns stream<Car, grpc:Error?> {
+    Car[] carsToSend = [];
+    foreach var car in listAvailableCars() {
+        if (req.filter.trim().length() > 0) {
+            if (car.make.toLowerAscii() == req.filter.toLowerAscii() ||
+                car.year.toBalString() == req.filter) {
+                carsToSend.push(car);
+            }
+        } else {
+            carsToSend.push(car);
+        }
     }
-
-    remote function placeReservation(PlaceReservationRequest value) returns PlaceReservationResponse|error {
-        return error("placeReservation: not implemented yet");
-    }
-
-    remote function createUsers(stream<User, grpc:Error?> clientStream) returns CreateUsersResponse|error {
-        return error("createUsers: not implemented yet");
-    }
-
-    remote function listAvailableCars(ListAvailableCarsRequest value) returns stream<Car, error?>|error {
-        return error("listAvailableCars: not implemented yet");
-    }
+    stream<Car, grpc:Error?> carStream = new stream<Car, grpc:Error?>(carsToSend);
+    return carStream;
+}
 }
