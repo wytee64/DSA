@@ -45,23 +45,29 @@ public function main() returns error? {
     while true {
         io:println("\nChoose an option:");
         io:println("1. Add Asset");
-        io:println("2. Get Asset by Tag");
+        io:println("2. Get Asset");
         io:println("3. Update Asset");
-        io:println("4. Delete Asset");
+        io:println("4. Remove Asset");
         io:println("5. Add Component to Asset");
         io:println("6. List Components of Asset");
-        io:println("7. Add Work Order");
-        io:println("8. List Work Orders");
-        io:println("9. Add Task to Work Order");
-        io:println("10. List Tasks in Work Order");
-        io:println("11. Exit");
-
-        string choice = io:readln("Enter choice (1-11): ");
-        if choice == "11" {
+        io:println("7. Update Component of Asset");
+        io:println("8. Remove Component of Asset");
+        io:println("9. Add Work Order to Asset");
+        io:println("10. List Work Orders of Asset");
+        io:println("11. Add Schedule to Asset");
+        io:println("12. List Schedules of Asset");
+        io:println("13. Update Schedule of Asset");
+        io:println("14. Remove Schedule of Asset");
+        io:println("15. Advance Schedule of Asset");
+        io:println("16. List Overdue Schedules");
+        io:println("17. Filter Assets by Faculty");
+        io:println("18. Exit");
+        io:print("enter choice (1-11): ");
+        string choice = io:readln().trim();
+        if choice == "18" {
             io:println("Exiting client... Goodbye!");
             break;
         }
-
         check handleChoice(choice);
     }
 }
@@ -76,28 +82,24 @@ function handleChoice(string choice) returns error? {
             string status = io:readln("Status (ACTIVE/UNDER_REPAIR/DISPOSED): ");
             string acquired = io:readln("Acquired Date (YYYY-MM-DD): ");
 
-            Asset asset = {
-                assetTag: tag,
-                name: name,
-                faculty: faculty,
+            json asset = { 
+                assetTag: tag, 
+                name: name, 
+                faculty: faculty, 
                 department: dept,
                 status: status,
-                acquiredDate: acquired,
-                components: {},
-                schedules: {},
-                workOrders: {}
+                aquiredDate: acquired 
             };
-
             json resp = check clientEP->post("/addAsset", asset);
             io:println("Response: ", resp.toJsonString());
         }
         "2" => {
-            string tag = io:readln("Enter Asset Tag: ");
+            string tag = io:readln("enter assetTag: ").trim();
             json resp = check clientEP->get("/getAsset/" + tag);
-            io:println("Response: ", resp.toJsonString());
+            io:println(resp.toJsonString());
         }
         "3" => {
-            string tag = io:readln("Enter Asset Tag to Update: ");
+            string tag = io:readln("enter Asset Tag to Update: ");
 
             // Get existing asset first
             json existing = check clientEP->get("/getAsset/" + tag);
@@ -149,6 +151,26 @@ function handleChoice(string choice) returns error? {
             io:println("Components: ", resp.toJsonString());
         }
         "7" => {
+            string tag = io:readln("asset Tag: ");
+            string cid = io:readln("ecomponent Id: ");
+            string name = io:readln("name: ");
+            string serial = io:readln("serial (optional): ");
+            string status = io:readln("status: ");
+            json comp = { 
+                name: name, 
+                serial: serial == "" ? () : serial , 
+                status: status == "" ? () : status
+                };
+            json resp = check clientEP->put("/" + tag + "/components/" + cid, comp);
+            io:println(resp.toJsonString());
+        }
+        "8" => {
+            string tag = io:readln("enter assetTag: ").trim();
+            string cid = io:readln("enter component Id: ").trim();
+            json resp = check clientEP->delete("/" + tag + "/components/" + cid);
+            io:println(resp.toJsonString());
+        }
+        "9" => {
             string tag = io:readln("Enter Asset Tag: ");
             string title = io:readln("Work Order Title: ");
             string desc = io:readln("Description: ");
@@ -158,26 +180,55 @@ function handleChoice(string choice) returns error? {
             json resp = check clientEP->post("/" + tag + "/workorders", wo);
             io:println("Response: ", resp.toJsonString());
         }
-        "8" => {
-            string tag = io:readln("Enter Asset Tag: ");
-            json resp = check clientEP->get("/" + tag + "/workorders");
-            io:println("Work Orders: ", resp.toJsonString());
-        }
-        "9" => {
-            string tag = io:readln("Enter Asset Tag: ");
-            string woId = io:readln("Enter Work Order ID: ");
-            string desc = io:readln("Task Description: ");
-            string status = io:readln("Task Status (pending/done): ");
-
-            Task t = {description: desc, status: status};
-            json resp = check clientEP->post("/" + tag + "/workorders/" + woId + "/tasks", t);
-            io:println("Response: ", resp.toJsonString());
-        }
         "10" => {
             string tag = io:readln("Enter Asset Tag: ");
-            string woId = io:readln("Enter Work Order ID: ");
-            json resp = check clientEP->get("/" + tag + "/workorders/" + woId + "/tasks");
-            io:println("Tasks: ", resp.toJsonString());
+            json resp = check clientEP->get("/" + tag + "/workorders");
+            io:println(resp.toJsonString());
+        }
+        "11" => {
+            string tag = io:readln("Enter Asset Tag: ");
+            string desc = io:readln("schedule description: ").trim();
+            string freq = io:readln("frequency (daily/weekly/monthly): ").trim();
+            string date = io:readln("nextDue (YYYY-MM-DD): ").trim();
+            json payload = { description: desc, frequency: freq, nextDue: date };
+            json resp = check clientEP->post("/" + tag + "/schedules", payload);
+            io:println(resp.toJsonString());
+        }
+        "12" => {
+            string tag = io:readln("Enter Asset Tag: ");
+            json resp = check clientEP->get("/" + tag + "/schedules");
+            io:println(resp.toJsonString());
+        }
+        "13" => {
+            string tag = io:readln("Enter Asset Tag: ");
+            string sid = io:readln("scheduleId: ").trim();
+            string desc = io:readln("description: ").trim();
+            string freq = io:readln("frequency: ").trim();
+            string date = io:readln("new nextDue: ").trim();
+            json sched = { description: desc, frequency: freq, nextDue: date };
+            json resp = check clientEP->put("/" + tag + "/schedules/" + sid, sched);
+            io:println(resp.toJsonString());
+        }
+        "14" => {
+            string tag = io:readln("Enter Asset Tag: ");
+            string sid = io:readln("schedule Id: ");
+            json resp = check clientEP->delete("/" + tag + "/schedules/" + sid);
+            io:println(resp.toJsonString());
+        }
+        "15" => {
+            string tag = io:readln("Enter Asset Tag: ");
+            string sid = io:readln("schedule Id: ");
+            json resp = check clientEP->post("/" + tag + "/schedules/" + sid + "/advance", {});
+            io:println(resp.toJsonString());
+        }
+        "16" => {
+            json resp = check clientEP->get("/overdue_schedules");
+            io:println(resp.toJsonString());
+        }
+        "17" => {
+            string faculty = io:readln("enter faculty: ").trim();
+            json resp = check clientEP->get("/faculty/" + faculty);
+            io:println(resp.toJsonString());
         }
         _ => {
             io:println("Invalid choice, please try again!");
