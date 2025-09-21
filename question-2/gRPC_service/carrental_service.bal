@@ -1,24 +1,5 @@
 import ballerina/grpc;
 
-map<Car> cars = {};
-map<User> users = {};
-map<CartItem[]> carts = {};
-map<Reservation> reservations = {};
-
-function addCar(Car newCar) returns boolean {
-    if (newCar.plateNumber.trim().length() == 0){return false;}
-    else if (newCar.make.trim().length() == 0){return false;}
-    else if (newCar.model.trim().length() == 0){return false;}
-    else if (newCar.year.toBalString().length() == 0){return false;}
-    else if (newCar.dailyPrice.toBalString().length() == 0){return false;}
-    else if (newCar.mileage.toBalString().length() == 0){return false;}
-    else if (newCar.status.trim().length() == 0){return false;}
-
-    if (newCar.hasKey(newCar.plateNumber)) {return false;}
-    cars[newCar.plateNumber] = newCar;
-    return true;
-}
-
 
 listener grpc:Listener ep = new (9090);
 
@@ -73,18 +54,61 @@ service "CarRental" on ep {
         return { cars: carList };
     }
 
-    remote function searchCar(SearchCarRequest value) returns SearchCarResponse|error {
+    remote function searchCar(SearchCarRequest req) returns SearchCarResponse {
+        Car? car= getCarByPlate(req.plate);
+        if !(car is ()) {
+            return { found: true, car: car};
+        }
+        return { found: false, car: {} };
     }
 
-    remote function addToCart(AddToCartRequest value) returns AddToCartResponse|error {
+remote function addToCart(AddToCartRequest req) returns AddToCartResponse {
+    CartItem item = {
+        plateNumber: req.plate,
+        startDate: req.startDate,
+        endDate: req.endDate
+    };
+    boolean success = addToCart(req.customerId, item);
+    return { success: success, item: item };
+}
+
+remote function placeReservation(PlaceReservationRequest req) returns PlaceReservationResponse {
+    CartItem[] items = getCart(req.customerId);
+    if items.length() == 0 {
+        return { success: false, reservation: {}, message: "Cart is empty" };
     }
 
-    remote function placeReservation(PlaceReservationRequest value) returns PlaceReservationResponse|error {
+    Reservation? reservation = createReservation(req.customerId, items);
+    if reservation is () {
+        return { success: false, reservation: {}, message: "Some cars not available or invalid dates" };
     }
+
+    return { success: true, reservation: reservation, message: "Reservation successful" };
+}
 
     remote function createUsers(stream<User, grpc:Error?> clientStream) returns CreateUsersResponse|error {
+        User[] users = [];
+        check from User user in clientStream
+            do {
+                users.push(user);
+            };
+        return {users: users};
     }
 
-    remote function listAvailableCars(ListAvailableCarsRequest value) returns stream<Car, error?>|error {
+remote function listAvailableCars(ListAvailableCarsRequest req) returns stream<Car, grpc:Error?> {
+    Car[] carsToSend = [];
+    foreach var car in listAvailableCars() {
+        if (req.filter.trim().length() > 0) {
+            if (car.make.toLowerAscii() == req.filter.toLowerAscii() ||
+                car.year.toBalString() == req.filter) {
+                carsToSend.push(car);
+            }
+        } else {
+            carsToSend.push(car);
+        }
     }
+    stream<Car, grpc:Error?> carStream = stream from Car car in carsToSend
+        select car;
+    return carStream;
+}
 }
