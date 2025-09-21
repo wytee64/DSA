@@ -62,7 +62,7 @@ public function main() returns error? {
         io:println("16. List Overdue Schedules");
         io:println("17. Filter Assets by Faculty");
         io:println("18. Exit");
-        io:print("enter choice (1-11): ");
+        io:print("enter choice (1-18): ");
         string choice = io:readln().trim();
         if choice == "18" {
             io:println("Exiting client... Goodbye!");
