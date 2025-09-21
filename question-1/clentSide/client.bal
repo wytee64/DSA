@@ -98,19 +98,27 @@ function handleChoice(string choice) returns error? {
         }
         "3" => {
             string tag = io:readln("Enter Asset Tag to Update: ");
-            string name = io:readln("New Name: ");
-            string status = io:readln("New Status: ");
+
+            // Get existing asset first
+            json existing = check clientEP->get("/getAsset/" + tag);
+            Asset existingAsset = <Asset>existing;
+
+            string name = io:readln("New Name (leave empty to keep '" + existingAsset.name + "'): ");
+            string status = io:readln("New Status (ACTIVE/UNDER_REPAIR/DISPOSED, leave empty to keep '" + existingAsset.status + "'): ");
+            string faculty = io:readln("New Faculty (leave empty to keep '" + existingAsset.faculty + "'): ");
+            string dept = io:readln("New Department (leave empty to keep '" + existingAsset.department + "'): ");
+            string acquired = io:readln("New Acquired Date (YYYY-MM-DD, leave empty to keep '" + existingAsset.acquiredDate + "'): ");
 
             Asset updated = {
                 assetTag: tag,
-                name: name,
-                faculty: "Engineering",
-                department: "IT",
-                status: status,
-                acquiredDate: "2024-01-01",
-                components: {},
-                schedules: {},
-                workOrders: {}
+                name: name.trim() != "" ? name : existingAsset.name,
+                status: status.trim() != "" ? status : existingAsset.status,
+                faculty: faculty.trim() != "" ? faculty : existingAsset.faculty,
+                department: dept.trim() != "" ? dept : existingAsset.department,
+                acquiredDate: acquired.trim() != "" ? acquired : existingAsset.acquiredDate,
+                components: existingAsset.components,
+                schedules: existingAsset.schedules,
+                workOrders: existingAsset.workOrders
             };
 
             json resp = check clientEP->put("/updateAsset/" + tag, updated);
@@ -125,8 +133,13 @@ function handleChoice(string choice) returns error? {
             string tag = io:readln("Enter Asset Tag: ");
             string name = io:readln("Component Name: ");
             string status = io:readln("Component Status (OK/FAULTY/REPLACED): ");
+            string serial = io:readln("Component Serial/ID (optional, leave empty if none): ");
 
-            Component comp = { name: name, status: status ,serial: ()};
+            Component comp = { 
+                name: name, 
+                status: status,
+                serial: serial.trim() != "" ? serial : ()
+            };
             json resp = check clientEP->post("/" + tag + "/components", comp);
             io:println("Response: ", resp.toJsonString());
         }
