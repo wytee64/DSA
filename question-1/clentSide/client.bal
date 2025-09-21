@@ -46,7 +46,7 @@ public function main() returns error? {
         io:println("\nChoose an option:");
         io:println("1. Add Asset");
         io:println("2. Get Asset by Tag");
-        io:println("3. Update Asset");
+        io:println("3. Update Asset ");
         io:println("4. Delete Asset");
         io:println("5. Add Component to Asset");
         io:println("6. List Components of Asset");
@@ -98,31 +98,27 @@ function handleChoice(string choice) returns error? {
         }
         "3" => {
             string tag = io:readln("Enter Asset Tag to Update: ");
-
-            // Get existing asset first
-            json existing = check clientEP->get("/getAsset/" + tag);
-            Asset existingAsset = <Asset>existing;
-
-            string name = io:readln("New Name (leave empty to keep '" + existingAsset.name + "'): ");
-            string status = io:readln("New Status (ACTIVE/UNDER_REPAIR/DISPOSED, leave empty to keep '" + existingAsset.status + "'): ");
-            string faculty = io:readln("New Faculty (leave empty to keep '" + existingAsset.faculty + "'): ");
-            string dept = io:readln("New Department (leave empty to keep '" + existingAsset.department + "'): ");
-            string acquired = io:readln("New Acquired Date (YYYY-MM-DD, leave empty to keep '" + existingAsset.acquiredDate + "'): ");
+            string name = io:readln("New Name: ");
+            string faculty = io:readln("New Faculty: ");
+            string dept = io:readln("New Department: ");
+            string status = io:readln("New Status (ACTIVE/UNDER_REPAIR/DISPOSED): ");
 
             Asset updated = {
                 assetTag: tag,
-                name: name.trim() != "" ? name : existingAsset.name,
-                status: status.trim() != "" ? status : existingAsset.status,
-                faculty: faculty.trim() != "" ? faculty : existingAsset.faculty,
-                department: dept.trim() != "" ? dept : existingAsset.department,
-                acquiredDate: acquired.trim() != "" ? acquired : existingAsset.acquiredDate,
-                components: existingAsset.components,
-                schedules: existingAsset.schedules,
-                workOrders: existingAsset.workOrders
+                name: name,
+                faculty: faculty,
+                department: dept,
+                status: status,
+                acquiredDate: "",    
+                components: {},       
+                schedules: {},        
+                workOrders: {}        
             };
 
+            io:println("\nPUT request:");
             json resp = check clientEP->put("/updateAsset/" + tag, updated);
-            io:println("Response: ", resp.toJsonString());
+            io:println(resp.toJsonString());
+            io:println("");
         }
         "4" => {
             string tag = io:readln("Enter Asset Tag to Delete: ");
@@ -132,14 +128,10 @@ function handleChoice(string choice) returns error? {
         "5" => {
             string tag = io:readln("Enter Asset Tag: ");
             string name = io:readln("Component Name: ");
+            string serial = io:readln("Component Serial Number/ID: ");
             string status = io:readln("Component Status (OK/FAULTY/REPLACED): ");
-            string serial = io:readln("Component Serial/ID (optional, leave empty if none): ");
 
-            Component comp = { 
-                name: name, 
-                status: status,
-                serial: serial.trim() != "" ? serial : ()
-            };
+            Component comp = { name: name, serial: serial, status: status };
             json resp = check clientEP->post("/" + tag + "/components", comp);
             io:println("Response: ", resp.toJsonString());
         }
