@@ -70,7 +70,7 @@ service "CarRental" on ep {
             carList.push(car);
         }
 
-        return { cars: carList };
+        return { cars: carList};
     }
 
     remote function searchCar(SearchCarRequest value) returns SearchCarResponse|error {
@@ -88,3 +88,4 @@ service "CarRental" on ep {
     remote function listAvailableCars(ListAvailableCarsRequest value) returns stream<Car, error?>|error {
     }
 }
+
